@@ -1,79 +1,100 @@
 package com.kaankacan.simple_crud_demo.service;
 
+import com.kaankacan.simple_crud_demo.dto.ProductCreateDTO;
+import com.kaankacan.simple_crud_demo.dto.ProductDetailDTO;
+import com.kaankacan.simple_crud_demo.dto.ProductListDTO;
+import com.kaankacan.simple_crud_demo.dto.ProductUpdateDTO;
 import com.kaankacan.simple_crud_demo.model.Product;
 import com.kaankacan.simple_crud_demo.repository.ProductRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ModelMapper modelMapper;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, ModelMapper modelMapper) {
+
         this.productRepository = productRepository;
+        this.modelMapper = modelMapper;
     }
 
 
-    // CREATE
-    public void saveProduct(Product product) {
-        productRepository.save(product);
+    public ProductDetailDTO saveProduct(ProductCreateDTO productCreateDTO) {
+
+        Product savedProduct = productRepository.save(modelMapper.map(productCreateDTO, Product.class));
+        return modelMapper.map(savedProduct, ProductDetailDTO.class);
     }
 
-    public void createMultipleProducts(List<Product> products)
-    {
-        productRepository.saveAll(products);
+    public List<ProductListDTO> getAllProducts() {
+
+        List<Product> getAllproductsList = productRepository.findAll();
+        return getAllproductsList.stream()
+            .map(product -> modelMapper.map(product, ProductListDTO.class))
+            .collect(Collectors.toList());
     }
 
-    // READ
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public ProductDetailDTO findProductById(int id) {
+
+        Product product = productRepository.findById(id).get();
+        return modelMapper.map(product, ProductDetailDTO.class);
     }
 
-    public Optional<Product> findProductByid(int id) {
-        return productRepository.findById(id);
+    public List<ProductDetailDTO> findProductByName(String name) {
+
+        List<Product> products = productRepository.findByName(name);
+
+        return products.stream()
+            .map(product -> modelMapper.map(product, ProductDetailDTO.class)).collect(Collectors.toList());
     }
 
-    public List<Product> findProductByName(String name) {
-        return productRepository.findByName(name);
+    public List<ProductDetailDTO> findbyNameOrDescriptionContaining(String keyword) {
+
+        List<Product> products = productRepository.findbyNameOrDescriptionContainig(keyword);
+        return products.stream()
+            .map(product -> modelMapper.map(product, ProductDetailDTO.class))
+            .collect(Collectors.toList());
     }
 
-    public List<Product> findbyNameOrDescriptionContainig(String keyword) {
-        return productRepository.findbyNameOrDescriptionContainig(keyword);
-    }
-    public List<Product> findProductsByQuantityGreaterThan(int quantity)
-    {
-        return productRepository.findProductsByQuantityGreaterThan(quantity);
-    }
-    public List<Product> findProductsOrderBySoldQuantityDesc()
-    {
-        return productRepository.findAllByOrderBySoldQuantityDesc();
-    }
-    // UPDATE
-    public void updateProduct(int id, Product product) {
-        Optional<Product> existingProductOpt = productRepository.findById(id);
-        Product existingProduct = existingProductOpt.get();
+    public List<ProductDetailDTO> findProductsByQuantityGreaterThan(int quantity) {
 
-        existingProduct.setName(product.getName());
-        existingProduct.setDescription(product.getDescription());
-        existingProduct.setPrice(product.getPrice());
-        existingProduct.setQuantity(existingProduct.getQuantity());
-        existingProduct.setSoldQuantity(existingProduct.getSoldQuantity());
-
-        productRepository.save(existingProduct);
+        List<Product> productList = productRepository.findProductsByQuantityGreaterThan(quantity);
+        return productList.stream()
+            .map(product -> modelMapper.map(product, ProductDetailDTO.class)).collect(Collectors.toList());
     }
 
-    public void updateProductQuantity(int id, int quantity)
-    {
+    public List<ProductDetailDTO> findProductsOrderBySoldQuantityDesc() {
+
+        List<Product> productList = productRepository.findAllByOrderBySoldQuantityDesc();
+        return productList.stream()
+            .map(product -> modelMapper.map(product, ProductDetailDTO.class))
+            .collect(Collectors.toList());
+    }
+
+    public ProductDetailDTO updateProduct(int id, ProductUpdateDTO productUpdateDTO) {
+
+        Product product = productRepository.findById(id).get();
+        modelMapper.map(productUpdateDTO, product);
+        Product savedProduct = productRepository.save(product);
+        return modelMapper.map(savedProduct, ProductDetailDTO.class);
+
+    }
+
+    public ProductDetailDTO updateProductQuantity(int id, int quantity) {
+
         Optional<Product> existingProductop = productRepository.findById(id);
         Product existingProduct = existingProductop.get();
         existingProduct.setQuantity(quantity);
-        productRepository.save(existingProduct);
+        Product product = productRepository.save(existingProduct);
+        return modelMapper.map(product, ProductDetailDTO.class);
     }
 
-    // DELETE
     public void deleteProductById(int id) {
         productRepository.deleteById(id);
     }
