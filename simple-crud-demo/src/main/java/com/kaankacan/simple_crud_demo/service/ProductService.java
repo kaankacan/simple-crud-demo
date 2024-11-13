@@ -4,6 +4,7 @@ import com.kaankacan.simple_crud_demo.dto.ProductCreateDTO;
 import com.kaankacan.simple_crud_demo.dto.ProductDetailDTO;
 import com.kaankacan.simple_crud_demo.dto.ProductListDTO;
 import com.kaankacan.simple_crud_demo.dto.ProductUpdateDTO;
+import com.kaankacan.simple_crud_demo.exception.ProductNotFoundException;
 import com.kaankacan.simple_crud_demo.model.Product;
 import com.kaankacan.simple_crud_demo.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
@@ -33,7 +34,6 @@ public class ProductService {
     }
 
     public List<ProductListDTO> getAllProducts() {
-
         List<Product> getAllproductsList = productRepository.findAll();
         return getAllproductsList.stream()
             .map(product -> modelMapper.map(product, ProductListDTO.class))
@@ -42,13 +42,16 @@ public class ProductService {
 
     public ProductDetailDTO findProductById(int id) {
 
-        Product product = productRepository.findById(id).get();
-        return modelMapper.map(product, ProductDetailDTO.class);
+        Optional<Product> product = productRepository.findById(id);
+        if (product.isEmpty()) {throw new ProductNotFoundException("Product ID = "+id);
+        }
+        return modelMapper.map(product.get(), ProductDetailDTO.class);
     }
 
     public List<ProductDetailDTO> findProductByName(String name) {
 
         List<Product> products = productRepository.findByName(name);
+        if (products.isEmpty()) {throw new ProductNotFoundException("Product Name = "+name);}
 
         return products.stream()
             .map(product -> modelMapper.map(product, ProductDetailDTO.class)).collect(Collectors.toList());
@@ -56,7 +59,8 @@ public class ProductService {
 
     public List<ProductDetailDTO> findbyNameOrDescriptionContaining(String keyword) {
 
-        List<Product> products = productRepository.findbyNameOrDescriptionContainig(keyword);
+        List<Product> products = productRepository.findByNameOrDescriptionContaining(keyword);
+        if(products.isEmpty()) {throw new ProductNotFoundException("Product keyword = "+keyword);}
         return products.stream()
             .map(product -> modelMapper.map(product, ProductDetailDTO.class))
             .collect(Collectors.toList());
@@ -79,9 +83,12 @@ public class ProductService {
 
     public ProductDetailDTO updateProduct(int id, ProductUpdateDTO productUpdateDTO) {
 
-        Product product = productRepository.findById(id).get();
+        Optional<Product> product = productRepository.findById(id);
+        if (product.isEmpty()) {throw new ProductNotFoundException("Product ıd = "+id);}
+
+
         modelMapper.map(productUpdateDTO, product);
-        Product savedProduct = productRepository.save(product);
+        Product savedProduct = productRepository.save(product.get());
         return modelMapper.map(savedProduct, ProductDetailDTO.class);
 
     }
@@ -96,6 +103,8 @@ public class ProductService {
     }
 
     public void deleteProductById(int id) {
+        Optional<Product> product = productRepository.findById(id);
+        if (product.isEmpty()) {throw new ProductNotFoundException("Product ıd = "+id);}
         productRepository.deleteById(id);
     }
 

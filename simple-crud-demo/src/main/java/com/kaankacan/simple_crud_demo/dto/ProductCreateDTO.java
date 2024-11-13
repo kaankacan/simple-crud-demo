@@ -1,9 +1,20 @@
 package com.kaankacan.simple_crud_demo.dto;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+
 public class ProductCreateDTO {
+    @NotEmpty(message = "Can not be empty!")
+    @Size(min = 3, max = 20, message = "Must be between 3 and 20 characters!")
     private String name;
+    @NotEmpty(message = "Can not be empty!")
+    @Size(min = 3, max = 100,message = "Must be between 3 and 100 characters!")
     private String description;
+    @Positive(message = "Must be grater than 0!")
     private double price;
+    @PositiveOrZero(message = "Can not be negative!")
     private int quantity;
 
     public String getName() {
